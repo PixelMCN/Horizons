@@ -89,9 +89,18 @@ async def stop(ctx):
 @client.command(pass_context=True)
 async def play(ctx, filename: str):
     voice = voice = ctx.voice_client
-    source = FFmpegPCMAudio(filename + '.mp3')
+    song = filename + '.mp3'
+    source = FFmpegPCMAudio(song)
     player = voice.play(source)
     await ctx.send(f'Playing {filename}!')
+#------------------------------------------------------------------------------------------
+@client.command(pass_context=True)
+async def queue(ctx, filename: str):
+    voice = voice = ctx.voice_client
+    song = filename + '.mp3'
+    source = FFmpegPCMAudio(song)
+
+    guild_id = ctx.message.guild.id
 
 
 client.run(DISCORD_TOKEN)
