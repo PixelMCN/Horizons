@@ -81,5 +81,11 @@ async def resume(ctx):
     else:
         await ctx.send('I am not paused!')
 
+@client.command()
+async def stop(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    voice.stop()
+    await ctx.send('I have stopped the audio!')
+
 
 client.run(DISCORD_TOKEN)
