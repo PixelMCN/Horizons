@@ -40,7 +40,7 @@ async def on_member_join(member):
 async def on_member_remove(member):
     print(f'{member} has left the server.')
 
-#this command makes the bot to join the voice channel of the user who sends the command.
+#this command makes the bot to join and play a audio file in the voice channel.
 @client.command(pass_context=True)
 async def join(ctx):
     if ctx.author.voice:
@@ -59,7 +59,23 @@ async def leave(ctx):
     else:
         await ctx.send('I am not in a voice channel!')
 
+#this command pauses the audio playing in the voice channel.
+@client.command()
+async def pause(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_playing():
+        voice.pause()
+    else:
+        await ctx.send('I am not playing anything!')
 
+#this command resumes the audio platying in the voice channel.
+@client.command()
+async def resume(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_paused():
+        voice.resume()
+    else:
+        await ctx.send('I am not paused!')
 
 
 client.run(DISCORD_TOKEN)
