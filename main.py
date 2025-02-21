@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
+from discord import FFmpegPCMAudio
+import requests
+import json
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -39,16 +42,18 @@ async def on_member_remove(member):
 
 #this command makes the bot to join the voice channel of the user who sends the command.
 @client.command(pass_context=True)
-async def join_vc(ctx):
+async def join(ctx):
     if ctx.author.voice:
         channel = ctx.author.voice.channel
-        await channel.connect()
+        voice = await channel.connect()
+        source = FFmpegPCMAudio('audio.mp4')
+        player = voice.play(source)
     else:
         await ctx.send('You are not in a voice channel!')
 
 #this command makes the bot to leave the voice channel.
 @client.command(pass_context=True)
-async def leave_vc(ctx):
+async def leave(ctx):
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
