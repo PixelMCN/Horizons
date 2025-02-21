@@ -48,6 +48,7 @@ async def join(ctx):
         voice = await channel.connect()
         source = FFmpegPCMAudio('audio.mp4')
         player = voice.play(source)
+        await ctx.send('I have joined the voice channel!')
     else:
         await ctx.send('You are not in a voice channel!')
 
@@ -56,6 +57,7 @@ async def join(ctx):
 async def leave(ctx):
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
+        await ctx.send('I have left the voice channel!')
     else:
         await ctx.send('I am not in a voice channel!')
 
@@ -65,6 +67,7 @@ async def pause(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_playing():
         voice.pause()
+        await ctx.send('I have paused the audio!')
     else:
         await ctx.send('I am not playing anything!')
 
@@ -74,6 +77,7 @@ async def resume(ctx):
     voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voice.is_paused():
         voice.resume()
+        await ctx.send('I have resumed the audio!')
     else:
         await ctx.send('I am not paused!')
 
