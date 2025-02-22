@@ -144,6 +144,11 @@ async def kick(ctx, member: Member, *, reason=None):
     await member.kick(reason=reason)
     await ctx.send(f'{member} has been kicked from the server.')
 #------------------------------------------------------------------------------------------
+@kick.error
+async def kick_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send('You do not have the permission to kick members!')
+#------------------------------------------------------------------------------------------
 #this command bans the user from the server.
 @client.command()
 @commands.has_permissions(ban_members=True)
@@ -166,6 +171,11 @@ async def unban(ctx, *, member):
             await ctx.send(f'{user.mention} has been unbanned from the server.')
             return
 #------------------------------------------------------------------------------------------
+@ban.error
+async def ban_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send('You do not have the permission to ban members!')
+#------------------------------------------------------------------------------------------
 #this command is used to purge the messages in the channel.
 @client.command()
 @commands.has_permissions(manage_messages=True)
@@ -173,6 +183,60 @@ async def clear(ctx, amount: int):
     await ctx.channel.purge(limit=amount)
     await ctx.send(f'{amount} messages have been cleared!')
 #------------------------------------------------------------------------------------------
+@clear.error
+async def clear_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send('You do not have the permission to clear messages!')
+#------------------------------------------------------------------------------------------
+#this command fetches guild information the bot is in.
+@client.command()
+async def guild(ctx):
+    guild = ctx.guild
+    name = guild.name
+    description = guild.description if guild.description else "No description available."
+    owner = guild.owner
+    icon = guild.icon.url if guild.icon else None  
+    member_count = guild.member_count
+    created_at = guild.created_at.strftime("%B %d, %Y")  # Format date
+    text_channels = len(guild.text_channels)
+    voice_channels = len(guild.voice_channels)
+    roles = len(guild.roles) - 1  # Excluding @everyone role
+    boost_level = guild.premium_tier  # Boost level
+    boost_count = guild.premium_subscription_count  # Boost count
 
+    embed = discord.Embed(
+        title=name,
+        description=description,
+        color=discord.Color.blue(),
+        timestamp=ctx.message.created_at  # Shows when command was used
+    )
+    
+    if icon:
+        embed.set_thumbnail(url=icon)
 
+    embed.add_field(name="Owner", value=owner, inline=True)
+    embed.add_field(name="Created On", value=created_at, inline=True)
+    embed.add_field(name="Members", value=member_count, inline=True)
+    embed.add_field(name="Text Channels", value=text_channels, inline=True)
+    embed.add_field(name="Voice Channels", value=voice_channels, inline=True)
+    embed.add_field(name="Roles", value=roles, inline=True)
+    embed.add_field(name="Boost Level", value=f"Level {boost_level}", inline=True)
+    embed.add_field(name="Boosts", value=boost_count, inline=True)
+
+    await ctx.send(embed=embed)
+
+    print("--------------------------------------------")
+    print(f"Guild: {name} was fetched.")
+    print(f"Description: {description}")
+    print(f"Owner: {owner}")
+    print(f"Icon: {icon}")
+    print(f"Member Count: {member_count}")
+    print(f"Created At: {created_at}")
+    print(f"Text Channels: {text_channels}")
+    print(f"Voice Channels: {voice_channels}")
+    print(f"Roles: {roles}")
+    print(f"Boost Level: Level {boost_level}")
+    print(f"Boosts: {boost_count}")
+    print("--------------------------------------------")
+#------------------------------------------------------------------------------------------
 client.run(DISCORD_TOKEN)
