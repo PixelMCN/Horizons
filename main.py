@@ -1,10 +1,13 @@
 import discord
 from discord.ext import commands
+from discord import Member
 import os
 from dotenv import load_dotenv
 from discord import FFmpegPCMAudio
 import requests
 import json
+
+
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -100,7 +103,7 @@ async def play(ctx, filename: str):
     voice = voice = ctx.voice_client
     song = filename + '.mp3'
     source = FFmpegPCMAudio(song)
-    player = voice.play(source)
+    player = voice.play(source, after=lambda x=None: check_queue(ctx, ctx.message.guild.id))
     await ctx.send(f'Playing {filename}!')
 #------------------------------------------------------------------------------------------
 @client.command(pass_context=True)
@@ -118,7 +121,58 @@ async def queue(ctx, filename: str):
 
     await ctx("Added to queue!")
 #------------------------------------------------------------------------------------------
+#exception handling for the commands.
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('Invalid command used.')
+#------------------------------------------------------------------------------------------
+#trying events, responds with hello when hi is sent.
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+    if "hi" in message.content.casefold():  
+        await message.channel.send('Hello!')
 
+    await client.process_commands(message)  #This line is important to process the commands.
+#------------------------------------------------------------------------------------------
+#this command kicks the user from the server.
+@client.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: Member, *, reason=None):
+    await member.kick(reason=reason)
+    await ctx.send(f'{member} has been kicked from the server.')
+#------------------------------------------------------------------------------------------
+#this command bans the user from the server.
+@client.command()
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, member: Member, *, reason=None):
+    await member.ban(reason=reason)
+    await ctx.send(f'{member} has been banned from the server.')
+#------------------------------------------------------------------------------------------
+#this command unbans the user from the server.
+@client.command()
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split('#')
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f'{user.mention} has been unbanned from the server.')
+            return
+#------------------------------------------------------------------------------------------
+#this command is used to purge the messages in the channel.
+@client.command()
+@commands.has_permissions(manage_messages=True)
+async def clear(ctx, amount: int):
+    await ctx.channel.purge(limit=amount)
+    await ctx.send(f'{amount} messages have been cleared!')
+#------------------------------------------------------------------------------------------
 
 
 client.run(DISCORD_TOKEN)
