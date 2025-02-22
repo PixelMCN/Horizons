@@ -8,8 +8,17 @@ import json
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+#------------------------------------------------------------------------------------------
+#dictionary to store the audio queues of the guilds.
+queues = {}
 
-
+def check_queue(ctx, id):
+    if queues[id] != []:
+        voice = voice = ctx.voice_client
+        source = queues[id].pop(0)
+        player = voice.play(source)
+#------------------------------------------------------------------------------------------
+       
 client = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 #------------------------------------------------------------------------------------------
 #on_ready event: This event triggers when the bot has finished setting up the bot.
@@ -101,6 +110,15 @@ async def queue(ctx, filename: str):
     source = FFmpegPCMAudio(song)
 
     guild_id = ctx.message.guild.id
+
+    if guild_id in queues:
+        queues[guild_id].append(source)
+    else:
+        queues[guild_id] = [source]
+
+    await ctx("Added to queue!")
+#------------------------------------------------------------------------------------------
+
 
 
 client.run(DISCORD_TOKEN)
