@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from discord import FFmpegPCMAudio
 import requests
 import json
-
+import yt_dlp
 
 
 load_dotenv()
@@ -27,6 +27,7 @@ client = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 #on_ready event: This event triggers when the bot has finished setting up the bot.
 @client.event
 async def on_ready():
+    await client.change_presence(activity=discord.Game(name='Create: Weaponworks'))
     print('Bot is ready.')
     print(f'Logged in as {client.user}')
     print('---------------------------------')
@@ -120,12 +121,6 @@ async def queue(ctx, filename: str):
         queues[guild_id] = [source]
 
     await ctx("Added to queue!")
-#------------------------------------------------------------------------------------------
-#exception handling for the commands.
-@client.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        await ctx.send('Invalid command used.')
 #------------------------------------------------------------------------------------------
 #trying events, responds with hello when hi is sent.
 @client.event
@@ -239,4 +234,76 @@ async def guild(ctx):
     print(f"Boosts: {boost_count}")
     print("--------------------------------------------")
 #------------------------------------------------------------------------------------------
+"""
+#command to play music from youtube api.
+@client.command()
+async def play_music(ctx, *, search):
+    api_key = os.getenv("YOUTUBE_API")  
+    url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q={search}&key={api_key}"
+
+    response = requests.get(url)
+    json_data = json.loads(response.text)
+
+    if "items" not in json_data or not json_data["items"]:
+        await ctx.send("No results found!")
+        return
+
+    video_id = json_data["items"][0]["id"]["videoId"]
+    video_title = json_data["items"][0]["snippet"]["title"]
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
+
+    
+    if ctx.voice_client is None:
+        if ctx.author.voice:
+            channel = ctx.author.voice.channel
+            voice_client = await channel.connect()
+        else:
+            await ctx.send("You must be in a voice channel!")
+            return
+    else:
+        voice_client = ctx.voice_client
+
+    
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(video_url, download=False)
+        audio_url = info["url"]
+
+    # Play the audio
+    voice_client.stop()
+    voice_client.play(discord.FFmpegPCMAudio(audio_url))
+
+    await ctx.send(f"🎵 **Now Playing:** {video_title}\n {video_url}")
+
+#------------------------------------------------------------------------------------------
+"""
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('Invalid command used!')
+#------------------------------------------------------------------------------------------
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send('You do not have the permission to use this command!')
+#------------------------------------------------------------------------------------------
+@client.command()
+async def message(ctx, member: discord.Member, *, message=None):
+    if message is None:
+        await ctx.send('Please provide a message!')
+        return
+    await member.send(message)
+    await ctx.send(f'Message sent to {member}!')
+#------------------------------------------------------------------------------------------
+
+
+#running the bot.
 client.run(DISCORD_TOKEN)
